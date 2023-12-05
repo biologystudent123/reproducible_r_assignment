@@ -1,0 +1,347 @@
+---
+title: "Homework Template"
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-10-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+*The following is a template .rmd RMarkdown file for you to use for your homework submission.*
+
+*Please Knit your .rmd to a PDF format or HTML and submit that with no identifiers like your name.*
+
+*To create a PDF, first install tinytex and load the package. Then press the Knit arrow and select "Knit to PDF".*
+
+## QUESTION 01: Data Visualisation for Science Communication
+
+*Create a figure using the Palmer Penguin dataset that is correct but badly communicates the data. **Do not make a boxplot**.*
+
+*Use the following references to guide you:*
+
+-   [*https://www.nature.com/articles/533452a*](https://www.nature.com/articles/533452a){.uri}
+-   [*https://elifesciences.org/articles/16800*](https://elifesciences.org/articles/16800){.uri}
+
+*Note: Focus on visual elements rather than writing misleading text on it.*
+
+### a) Provide your figure here:
+
+```{r bad figure code,echo=FALSE}
+# There is no need to provide the code for your bad figure, just use echo=FALSE so the code is hidden. Make sure your figure is visible after you knit it. 
+
+setwd("C:/Users/johns/OneDrive/Documents/UNIVERSITY/Year 3/Computing/repro_r")
+
+#install.packages(c("ggplot2", "palmerpenguins", "dplyr", "janitor", "car", "ggpubr", "ragg", "multcomp","svglite", "tinytex"))
+library("knitr")
+library("ggplot2")
+library("palmerpenguins")
+library("dplyr")
+library("janitor")
+library("car")
+library("ggpubr")
+library("ragg")
+library("multcomp")
+library("svglite")
+library("tinytex")
+
+
+FLvsBMscatterplot <- ggplot(data = penguins, aes(x = flipper_length_mm, 
+                                                 y = body_mass_g, color = species))+ 
+  geom_point(size = 8) + 
+  scale_x_continuous(limits=c(0,225)) + 
+  scale_y_continuous(limits=c(3000,5500)) + 
+  theme_light() + 
+  ggtitle('Scatter plot comparing flipper length and body mass for penguin species') + 
+  scale_color_manual(values = c("#e53935","#4caf50","#b71c1c"))
+
+FLvsBMscatterplot
+
+```
+
+### b) Write about how your design choices mislead the reader about the underlying data (200-300 words).
+*Include references.*
+
+The colour palette misleads the reader. The colours of the Gentoo and Adelie species are more similar, which could lead the reader to assume they are more closely related to each other than to the Chinstrap species. It makes the Chinstrap species look like an outgroup, when it is actually more closely related to Gentoo than Adelie (Vianna,J.,et al. 2020). Also the red and green colours used are not red-green colour blind friendly, so could lead to colour-blind readers being unable to determine the species of each point (Rougier,NP., et al.2014). 
+
+The x-axis being scaled from 0 to 225 clusters the points at the end of the x-axis. This hides the actual difference in flipper_length_mm within and between the species on the graph. This axis scaling misleads the reader (Rougier,NP., et al.2014) by suggesting a greater amount of variability in the data between the species is due to difference in body mass rather than flipper length.
+
+The large, overlapping points present fewer points in the space and hide certain data points, it is unclear whether there are Gentoo data points in the co-ordinate region(~175, ~3500), as that region is obscured by the overlayed Chinstrap data. This misleads the reader (Tufte EG. 1983) by suggesting a more significant difference in body mass data between the species.
+
+**Bibliography:**
+
+(1) Vianna J. et al. (2020) 'Genome-wide analyses reveal drivers of penguin diversification' PNAS, 117(36) 22303-22310. doi: 10.1073/pnas.200665911 
+
+(2) Rougier NP. (2014) Ten Simple Rules for Better Figures. PLoS Comput Biol 10(9):e1003833
+
+(3) Tufte EG. (1983) The Visual Display of Quantitative Information. Cheshire, Connecticut: Graphics Press
+
+
+------------------------------------------------------------------------
+
+## QUESTION 2: Data Pipeline
+
+*Write a data analysis pipeline in your .rmd RMarkdown file. You should be aiming to write a clear explanation of the steps, the figures visible, as well as clear code.*
+
+*Your code should include the steps practiced in the lab session:*
+
+-   *Load the data*
+
+-   *Appropriately clean the data*
+
+-   *Create an Exploratory Figure (**not a boxplot**)*
+
+-   *Save the figure*
+
+-   ***New**: Run a statistical test*
+
+-   ***New**: Create a Results Figure*
+
+-   *Save the figure*
+
+*An exploratory figure shows raw data, such as the distribution of the data. A results figure demonstrates the stats method chosen, and includes the results of the stats test.*
+
+*Between your code, communicate clearly what you are doing and why.*
+
+*Your text should include:*
+
+-   *Introduction*
+
+-   *Hypothesis*
+
+-   *Stats Method*
+
+-   *Results*
+
+-   *Discussion*
+
+-   *Conclusion*
+
+*You will be marked on the following:*
+
+### a) Your code for readability and functionality
+
+### b) Your figures for communication
+
+### c) Your text communication of your analysis
+
+*Below is a template you can use.*
+
+------------------------------------------------------------------------
+
+### Introduction
+
+Using the Palmer Penguins data set, I will test whether the culmen length of female Adelie penguins varies between the Islands: Dream, Biscoe and Torgersen.
+
+To carry out this comparison, I will: 
+
+ + clean the dataset to provide a clear data set containing just the data for Female Adelie penguins
+ 
+ + display the distribution of culmen length for each island using a violin plot
+ 
+ + perform a one way ANOVA and test if the data fit the required assumptions (normality and equal variance between groups)
+ 
+ + analyse the ANOVA results using a Tukey-Kramer post hoc test
+ 
+ + visualise the results of the post hoc test using a boxplot showing the Post-Hoc results and comparing 95% confidence levels
+ 
+ 
+ 
+This chunk cleans the dataset, so (1) a comparative violin plot of female Adelie culmen length for each island can be produced and (2) a one-way ANOVA can be performed
+
+```{r Data Exploration}
+
+### set working directory + source functions
+
+setwd("C:/Users/johns/OneDrive/Documents/UNIVERSITY/Year 3/Computing/repro_r")
+
+source('cleaningfunctions.R')
+
+### use piping to clean data (make column names readable, shorten species names, 
+### remove empty columns/rows, remove certain species, remove NAs 
+### and remove Males)
+
+penguins_clean <- penguins_raw %>%
+    clean_column_names() %>%
+    shorten_species() %>%
+    remove_empty_columns_rows() %>% 
+    filter_by_species("Adelie") %>% 
+    filter(!is.na(culmen_length_mm)) %>% 
+    subset(sex != "MALE")
+
+
+###exploratory figure
+### plot violin plot to compare distributions between islands
+
+violinplot <- ggplot(penguins_clean, aes(x = island, y = culmen_length_mm, 
+                           color = island)) +
+  geom_violin(width = 0.5, show.legend = FALSE, trim = FALSE, size = 0.7) + 
+  geom_jitter(aes(color = island), alpha = 0.9, width = 0.1, 
+              show.legend = FALSE) + 
+  ylab("Culmen length / mm") + 
+  xlab("Island Identity") +
+  ggtitle("Does Island Identity tell us anything about the Culmen Length of Female Adelie 
+Penguins?") +
+  theme_grey() + theme(plot.title = element_text(size = 12))
+
+violinplot
+
+###save exploratory figure
+while (!is.null(dev.list()))  dev.off()
+
+svglite("figures/exploratoryfig01_vector.svg", 
+        width = 7.2, height = 5.9, scaling = 1)
+violinplot
+dev.off()
+
+
+```
+
+### Hypothesis
+
+H0: *Culmen length does not vary significantly between female Adelie penguins from different islands*
+
+H1: *Culmen length does vary significantly between female Adelie penguins from different islands*
+
+### Statistical Methods
+
+Part 1 - Perform One-Way Anova, as there are three island groups (categorical variable) and culmen length (continuous variable)
+
+Part 2 - (Check assumptions of One-Way Anova) Perform Shapiro-Wilk test to determine the residues are normally distributed and Bartlett test to determine the data from each island have equal variances
+
+Part 3 - Perform Post-hoc Test (Tukey Kramer) to see P-values for difference in Culmen Length between islands being due to chance
+
+
+```{r Statistics}
+
+###one-way ANOVA to compare whether culmen length varies significantly between 3 islands
+
+penguins_clean %>% 
+  group_by(island) %>% 
+  summarise(mean = mean(culmen_length_mm), sd = sd(culmen_length_mm))
+
+AOVmodel <- aov(culmen_length_mm ~ island, data = penguins_clean)
+
+summary(AOVmodel) #no significant difference (p>0.05)
+
+### check assumptions (normality and equal variances)
+
+residuals <- residuals(AOVmodel)
+shapiro.test(residuals) #residuals are normal (p > 0.05)
+
+bartlett.test(culmen_length_mm ~ island, 
+              data = penguins_clean) #data have equal variances(P > 0.05)
+
+### post-hoc test (tukey-kramer) to show the p-values for comparing each island
+
+tukey_test <- TukeyHSD(AOVmodel, conf.level=.95)#no sig. diff. between any group
+
+print(tukey_test)
+
+# Make sure your code prints. 
+
+```
+
+### Results & Discussion
+
+1 - One-Way ANOVA (P = 0.514), fail to reject H0. Data shows no significant difference in culmen length in Female Adelie Penguins between the Islands.
+
+2 - Assumptions of normality (P = 0.987) and equal variance of residuals (P = 0.568) are met.
+
+3 - Post Hoc Tukey Kramer test confirmed no significant differenece in culmen length between any of the groups.
+
+```{r Plotting Results, fig.align = 'centre'}
+
+###Plot results of Post-Hoc Test:
+#plot boxplot showing the p values for comparison between each group
+
+
+#explanatory figure: boxplot comparing culmen length distribution and p-values. 
+#showing no sig. difference between groups
+
+
+median_data <- aggregate(culmen_length_mm ~ island, data = penguins_clean, median)
+medians_data <- aggregate(culmen_length_mm ~ island, data = penguins_clean, median)
+median_torgersen <- medians_data$culmen_length_mm[medians_data$island == "Torgersen"]
+median_biscoe <- medians_data$culmen_length_mm[medians_data$island == "Biscoe"]
+
+
+results_boxplot <- ggplot(penguins_clean, aes(x = island, y = culmen_length_mm, 
+                           color = island)) +
+  geom_boxplot(width = 0.8, show.legend = FALSE, size = 1) +
+  ylab("Culmen length / mm") + 
+  xlab("Island Identity") + 
+  ggtitle("Boxplot displaying TukeyHSD results") +
+  theme_bw() + 
+  geom_point(data = median_data, aes(x = island, y = culmen_length_mm), 
+             shape = 16, size = 4, show.legend = FALSE) +
+  geom_line(data = median_data, aes(x = island, y = culmen_length_mm, group = 1), 
+            size = 1, color = "black") + 
+  geom_segment(aes(x = "Torgersen", xend = "Biscoe", y = median_torgersen, 
+                   yend = median_biscoe),
+                 color = "black", size = 1) + 
+  geom_text(data = medians_data, aes(x = "Torgersen", y = median_torgersen + 0.5, 
+                                     label = "T-B (P = 0.944)"),
+            hjust = 2, size = 3, color = "black") +
+  geom_text(data = medians_data, aes(x = "Biscoe", y = median_biscoe - 0.7, 
+                                     label = "D-B (P = 0.725)"),
+            hjust = -0.26, size = 3, color = "black") + 
+  geom_text(data = medians_data, aes(x = "Biscoe", y = median_biscoe - 0.7, 
+                                     label = "T-D (P = 0.502)"),
+            hjust = -4, size = 3, color = "black")
+
+results_boxplot
+
+###save plot
+
+while (!is.null(dev.list()))  dev.off()
+
+svglite("figures/resultsfig01_vector.svg", 
+        width = 7, height = 5.9, scaling = 1)
+results_boxplot
+dev.off()
+
+
+```
+
+
+### Conclusion
+
+To conclude, the Palmer penguins data set shows no significant difference in culmen length between islands (Dream, Torgersen and Biscoe) for Female Adelie Penguins.
+
+------------------------------------------------------------------------
+
+## QUESTION 3: Open Science
+
+### a) GitHub
+
+*Upload your RProject you created for **Question 2** and any files and subfolders used to GitHub. Do not include any identifiers such as your name. Make sure your GitHub repo is public.*
+
+*GitHub link:*
+
+*You will be marked on your repo organisation and readability.*
+
+### b) Share your repo with a partner, download, and try to run their data pipeline.
+
+*Partner's GitHub link:*
+
+*You **must** provide this so I can verify there is no plagiarism between you and your partner.*
+
+### c) Reflect on your experience running their code. (300-500 words)
+
+-   *What elements of your partner's code helped you to understand their data pipeline?*
+
+-   *Did it run? Did you need to fix anything?*
+
+-   *What suggestions would you make for improving their code to make it more understandable or reproducible, and why?*
+
+-   *If you needed to alter your partner's figure using their code, do you think that would be easy or difficult, and why?*
+
+### d) Reflect on your own code based on your experience with your partner's code and their review of yours. (300-500 words)
+
+-   *What improvements did they suggest, and do you agree?*
+
+-   *What did you learn about writing code for other people?*
